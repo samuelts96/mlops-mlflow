@@ -1,0 +1,126 @@
+[
+    {
+        "name": "Time",
+        "dtype": "float64"
+    },
+    {
+        "name": "V1",
+        "dtype": "float64"
+    },
+    {
+        "name": "V2",
+        "dtype": "float64"
+    },
+    {
+        "name": "V3",
+        "dtype": "float64"
+    },
+    {
+        "name": "V4",
+        "dtype": "float64"
+    },
+    {
+        "name": "V5",
+        "dtype": "float64"
+    },
+    {
+        "name": "V6",
+        "dtype": "float64"
+    },
+    {
+        "name": "V7",
+        "dtype": "float64"
+    },
+    {
+        "name": "V8",
+        "dtype": "float64"
+    },
+    {
+        "name": "V9",
+        "dtype": "float64"
+    },
+    {
+        "name": "V10",
+        "dtype": "float64"
+    },
+    {
+        "name": "V11",
+        "dtype": "float64"
+    },
+    {
+        "name": "V12",
+        "dtype": "float64"
+    },
+    {
+        "name": "V13",
+        "dtype": "float64"
+    },
+    {
+        "name": "V14",
+        "dtype": "float64"
+    },
+    {
+        "name": "V15",
+        "dtype": "float64"
+    },
+    {
+        "name": "V16",
+        "dtype": "float64"
+    },
+    {
+        "name": "V17",
+        "dtype": "float64"
+    },
+    {
+        "name": "V18",
+        "dtype": "float64"
+    },
+    {
+        "name": "V19",
+        "dtype": "float64"
+    },
+    {
+        "name": "V20",
+        "dtype": "float64"
+    },
+    {
+        "name": "V21",
+        "dtype": "float64"
+    },
+    {
+        "name": "V22",
+        "dtype": "float64"
+    },
+    {
+        "name": "V23",
+        "dtype": "float64"
+    },
+    {
+        "name": "V24",
+        "dtype": "float64"
+    },
+    {
+        "name": "V25",
+        "dtype": "float64"
+    },
+    {
+        "name": "V26",
+        "dtype": "float64"
+    },
+    {
+        "name": "V27",
+        "dtype": "float64"
+    },
+    {
+        "name": "V28",
+        "dtype": "float64"
+    },
+    {
+        "name": "Amount",
+        "dtype": "float64"
+    },
+    {
+        "name": "Class",
+        "dtype": "int64"
+    }
+]
