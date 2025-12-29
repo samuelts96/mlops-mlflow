@@ -1,36 +1,48 @@
 import json
 import pandas as pd
+from pathlib import Path
 
-def freeze_feature_contract(df: pd.DataFrame, target_column: str = 'Class') -> None:
-    # Define the feature contract
-    feature_names = ['Time'] + [f'V{i}' for i in range(1, 29)] + ['Amount', target_column]
-    
-    # Fix feature names and order
-    df = df[feature_names]
-    
-    # Fix data types according to the feature contract
-    # Assuming all V features and Time, Amount are float64, target is int or categorical
-    for col in feature_names:
-        if col == target_column:
-            # Convert target to int
-            df[col] = df[col].astype(int)
-        else:
-            df[col] = df[col].astype(float)
-    
-    # Persist the feature list (names, order, dtypes) to features.json
-    feature_list = []
-    for col in feature_names:
-        feature_list.append({
-            'name': col,
-            'dtype': str(df[col].dtype)
-        })
-    with open('features.json', 'w') as f:
-        json.dump(feature_list, f, indent=4)
+FEATURES_PATH = Path("features.json")
 
-    return df
 
-if __name__ == '__main__':
-    import src.data_ingestion as di
-    df = di.ingest_data('data/creditcard_cleaned.csv')
-    df_fixed = freeze_feature_contract(df)
-    print('Feature contract frozen and saved to features.json')
+def freeze_feature_contract(
+    df: pd.DataFrame,
+    target_column: str = "Class",
+    mode: str = "train",  # "train" | "inference"
+) -> pd.DataFrame:
+    if mode == "train":
+        feature_names = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount", target_column]
+
+        df = df[feature_names]
+
+        for col in feature_names:
+            if col == target_column:
+                df[col] = df[col].astype(int)
+            else:
+                df[col] = df[col].astype(float)
+
+        feature_list = [
+            {"name": col, "dtype": str(df[col].dtype)}
+            for col in feature_names
+        ]
+
+        FEATURES_PATH.write_text(json.dumps(feature_list, indent=4))
+        return df
+
+    elif mode == "inference":
+        if not FEATURES_PATH.exists():
+            raise RuntimeError("features.json not found. Train a model first.")
+
+        feature_list = json.loads(FEATURES_PATH.read_text())
+        feature_names = [f["name"] for f in feature_list if f["name"] != target_column]
+
+        df = df[feature_names]
+
+        for f in feature_list:
+            if f["name"] != target_column:
+                df[f["name"]] = df[f["name"]].astype(f["dtype"])
+
+        return df
+
+    else:
+        raise ValueError("mode must be 'train' or 'inference'")
