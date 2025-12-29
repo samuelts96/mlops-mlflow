@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# System deps
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip first (important)
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install pinned, compatible versions
+RUN pip install --no-cache-dir \
+    mlflow==2.12.1 \
+    psycopg2-binary==2.9.9 \
+    boto3==1.34.122
+
+EXPOSE 5000
+
+CMD ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000"]
