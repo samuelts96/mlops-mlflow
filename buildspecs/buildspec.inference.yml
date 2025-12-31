@@ -1,0 +1,28 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: eu-west-2
+    ECR_REPO: fraud-inference-api
+    IMAGE_TAG: latest
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR
+      - aws ecr get-login-password --region $AWS_REGION |
+        docker login --username AWS --password-stdin \
+        430006376054.dkr.ecr.$AWS_REGION.amazonaws.com
+
+  build:
+    commands:
+      - echo Build Docker image
+      - docker build -t $ECR_REPO -f Dockerfile.inference .
+      - docker tag $ECR_REPO:latest \
+        430006376054.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+
+  post_build:
+    commands:
+      - echo Push Docker image
+      - docker push \
+        430006376054.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
