@@ -1,17 +1,24 @@
-import mlflow
+import os
 import pandas as pd
+
+import mlflow.pyfunc
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from src.freeze_feature_contract import freeze_feature_contract
 
-mlflow.set_tracking_uri("http://localhost:5000")
 
-model = mlflow.pyfunc.load_model(
-    "models:/CreditCardFraudModel@production"
-)
+TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+if not TRACKING_URI:
+    raise RuntimeError("MLFLOW_TRACKING_URI not set")
 
-app = FastAPI(title="Credit Card Fraud Inference API")
+MODEL_NAME = os.getenv("MODEL_NAME", "CreditCardFraudModel")
+MODEL_STAGE = os.getenv("MODEL_STAGE", "Production")
+
+model_uri = f"models:/{MODEL_NAME}@{MODEL_STAGE}"
+model = mlflow.pyfunc.load_model(model_uri)
+
+app = FastAPI(title="Fraud Detection Inference API")
 
 
 class Transaction(BaseModel):
@@ -47,25 +54,17 @@ class Transaction(BaseModel):
     Amount: float
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.post("/predict")
 def predict(tx: Transaction):
     try:
-        # 1. Build DataFrame from named fields
         df = pd.DataFrame([tx.dict()])
-
-        # 2. Enforce feature contract
-        df = freeze_feature_contract(
-            df,
-            mode="inference"
-        )
-
-        # 3. Predict
+        df = freeze_feature_contract(df, mode="inference")
         pred = model.predict(df)
-
         return {"prediction": int(pred[0])}
-
     except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Inference failed: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=str(e))

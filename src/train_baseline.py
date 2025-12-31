@@ -18,7 +18,11 @@ from src.freeze_feature_contract import freeze_feature_contract
 # )
 
 # mlflow.set_tracking_uri("postgresql://postgres:dsclp-mlflowuser@mlflow-sam.crunhuiqgoz4.eu-west-2.rds.amazonaws.com:5432/mlflow-sam?sslmode=require")
-mlflow.set_tracking_uri("http://localhost:5000")
+tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+if not tracking_uri:
+    raise RuntimeError("MLFLOW_TRACKING_URI is not set")
+
+mlflow.set_tracking_uri(tracking_uri)
 
 
 def train_baseline():

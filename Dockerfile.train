@@ -8,12 +8,17 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install --upgrade pip
 
-# Match DB schema version
+# Install project deps
+COPY pyproject.toml .
 RUN pip install --no-cache-dir \
     mlflow==3.8.1 \
     psycopg2-binary \
-    boto3
+    boto3 \
+    pandas \
+    scikit-learn
 
-EXPOSE 5000
+# Copy training code
+COPY src/ src/
+COPY data/ data/
 
-CMD ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--allowed-hosts", "mlflow.internal:5000,localhost:5000,127.0.0.1:5000"]
+CMD ["python", "-m", "src.train_baseline"]
