@@ -1,24 +1,11 @@
-import os
-import pandas as pd
+import json
+from pathlib import Path
 
-import mlflow.pyfunc
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from src.freeze_feature_contract import freeze_feature_contract
-
-
-TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
-if not TRACKING_URI:
-    raise RuntimeError("MLFLOW_TRACKING_URI not set")
-
-MODEL_NAME = os.getenv("MODEL_NAME", "CreditCardFraudModel")
-MODEL_STAGE = os.getenv("MODEL_STAGE", "Production")
-
-model_uri = f"models:/{MODEL_NAME}@{MODEL_STAGE}"
-model = mlflow.pyfunc.load_model(model_uri)
-
 app = FastAPI(title="Fraud Detection Inference API")
+FEATURES_PATH = Path("features.json")
 
 
 class Transaction(BaseModel):
@@ -54,6 +41,44 @@ class Transaction(BaseModel):
     Amount: float
 
 
+class DummyFraudModel:
+    """Deterministic mock used when no real model is available."""
+
+    def predict(self, features: dict[str, float]) -> int:
+        risk_score = 0.0
+
+        amount = abs(features["Amount"])
+        risk_score += min(amount / 1000.0, 1.5)
+
+        risk_score += min(abs(features["V4"]) / 10.0, 0.5)
+        risk_score += min(abs(features["V10"]) / 10.0, 0.5)
+        risk_score += min(abs(features["V14"]) / 10.0, 0.5)
+        risk_score += min(abs(features["V17"]) / 10.0, 0.5)
+
+        return int(risk_score >= 1.2)
+
+
+def load_feature_names() -> list[str]:
+    if not FEATURES_PATH.exists():
+        raise RuntimeError("features.json not found. Backend cannot validate inputs.")
+
+    feature_list = json.loads(FEATURES_PATH.read_text())
+    return [feature["name"] for feature in feature_list if feature["name"] != "Class"]
+
+
+FEATURE_NAMES = load_feature_names()
+model = DummyFraudModel()
+
+
+def build_feature_payload(tx: Transaction) -> dict[str, float]:
+    payload = tx.model_dump()
+    missing = [feature for feature in FEATURE_NAMES if feature not in payload]
+    if missing:
+        raise ValueError(f"Missing required features: {', '.join(missing)}")
+
+    return {feature: float(payload[feature]) for feature in FEATURE_NAMES}
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -62,9 +87,8 @@ def health():
 @app.post("/predict")
 def predict(tx: Transaction):
     try:
-        df = pd.DataFrame([tx.dict()])
-        df = freeze_feature_contract(df, mode="inference")
-        pred = model.predict(df)
-        return {"prediction": int(pred[0])}
+        features = build_feature_payload(tx)
+        pred = model.predict(features)
+        return {"prediction": pred, "model_source": "mock"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -7,17 +7,12 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN pip install --upgrade pip
 
 RUN pip install --no-cache-dir \
-    mlflow==3.8.1 \
-    psycopg2-binary \
-    boto3 \
     fastapi \
     uvicorn \
-    pandas \
-    scikit-learn
+    pydantic
 
 COPY inference_api.py .
 COPY features.json .
-COPY src/ src/
 
 EXPOSE 8000
 
