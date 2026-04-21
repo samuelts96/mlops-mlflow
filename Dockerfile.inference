@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN pip install --upgrade pip
 
 RUN pip install --no-cache-dir \
-    fastapi \
-    uvicorn \
+    fastapi==0.127.1 \
+    uvicorn==0.40.0 \
     pydantic
 
 COPY inference_api.py .
